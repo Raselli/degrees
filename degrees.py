@@ -91,38 +91,40 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    queue = QueueFrontier()           
+    visited = StackFrontier()  
     
-    # Initial State
-    start = Node(state=source, parent=None, action=None)   
-     
+    # Load source-node into queue
+    source_node = Node(source, None, None)
+    queue.add(source_node)
+    
     # BFS
-    frontier = QueueFrontier()
-    frontier.add(start)
-    explored = set()
-    while True:
+    while not queue.empty():
         
-        # No solution
-        if frontier.empty():
-            return
+        # Pop front of queue
+        node = queue.remove()
+        visited.add(node)
         
-        # Inspect next Node
-        node = frontier.remove()
-        explored.add(node.state)
-        for actor in neighbors_for_person(node.state):
+        # Expand search
+        child_nodes = neighbors_for_person(node.state)
+        for child_node in child_nodes:
             
-            # Goal Test
-            if node.state == target:
-                solution = []
-                while node.parent is not None:
-                    solution.append((node.action, node.state))
-                    node = node.parent
-                solution.reverse()
-                return solution
+            # Target found
+            if child_node[1] == target:
+                result = [child_node]
+                while node.parent:
+                    result.append((node.action, node.state))
+                    node = node.parent                
+                return result[::-1]    
             
-            # Expand frontier  
-            elif not frontier.contains_state(actor[1]) and actor[1] not in explored: 
-                child = Node(state=actor[1], parent=node, action=actor[0])
-                frontier.add(child)            
+            # Add nodes to queue            
+            if not queue.contains_state(child_node) and\
+                not visited.contains_state(child_node[1]):
+                new_node = Node(child_node[1], node, child_node[0])
+                queue.add(new_node)
+    
+    # No solution
+    return None
 
 
 def person_id_for_name(name):
